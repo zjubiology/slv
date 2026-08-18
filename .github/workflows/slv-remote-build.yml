@@ -51,7 +51,7 @@ jobs:
 
   test:
     name: Run Tests
-    runs-on: [slv-bm-runners, slv-bm-runners]
+    runs-on: ${{ github.event_name == 'pull_request' && 'ubuntu-latest' || 'slv-bm-runners' }}
     steps:
       - name: Pre-clean workspace
         run: |
