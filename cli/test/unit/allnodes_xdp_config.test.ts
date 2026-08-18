@@ -6,7 +6,7 @@ import {
 
 const zeroCopy: XdpConfig = {
   xdp_enabled: true,
-  xdp_interface: 'enp196s0f0np0',
+  xdp_interface: 'synthetic-iface',
   xdp_cpu_cores: 4,
   xdp_zero_copy: true,
   xdp_poh_pinned_cpu_core: 4,
