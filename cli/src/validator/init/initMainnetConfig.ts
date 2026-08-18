@@ -137,8 +137,11 @@ const initMainnetConfig = async (
   const blockEngineRegion = getNearRegion.info.blockEngineUrl
   const shredstream_address = getNearRegion.info.shredReceiver
   const relayer_url = getNearRegion.info.relayerUrl
-  // XDP retransmit acceleration (agave/jito only)
-  const xdpConfig = await promptXdpConfig(validatorType as SolanaNodeType)
+  // XDP retransmit acceleration (Agave/Jito/Allnodes-Jito)
+  const xdpConfig = await promptXdpConfig(
+    validatorType as SolanaNodeType,
+    'mainnet',
+  )
   // Generate Vote Key
   const { voteAccount, authAccount } = await genVoteKey(identityAccount)
   const configMainnet: Partial<ValidatorMainnetConfig> = {

@@ -1,6 +1,6 @@
 import { Confirm, Input, prompt } from '@cliffy/prompt'
 import { colors } from '@cliffy/colors'
-import type { SolanaNodeType } from '@cmn/types/config.ts'
+import type { NetworkType, SolanaNodeType } from '@cmn/types/config.ts'
 
 export interface XdpConfig {
   xdp_enabled?: boolean
@@ -8,6 +8,42 @@ export interface XdpConfig {
   xdp_cpu_cores?: number
   xdp_zero_copy?: boolean
   xdp_poh_pinned_cpu_core?: number
+}
+
+export const validateXdpConfig = (
+  validatorType: SolanaNodeType,
+  network: NetworkType,
+  config: XdpConfig,
+): XdpConfig => {
+  if (!config.xdp_zero_copy) return config
+  // Preserve the existing Agave/Jito XDP contract. The stricter mainnet-only
+  // zero-copy boundary is specific to the new Allnodes-Jito source path.
+  if (validatorType !== 'allnodes-jito') return config
+  if (network !== 'mainnet') {
+    throw new Error('XDP zero-copy is only supported for mainnet')
+  }
+  if (!config.xdp_enabled || !config.xdp_interface?.trim()) {
+    throw new Error(
+      'XDP zero-copy requires XDP to be enabled with an explicit interface',
+    )
+  }
+  const xdpCpuCores = config.xdp_cpu_cores
+  if (
+    typeof xdpCpuCores !== 'number' ||
+    !Number.isInteger(xdpCpuCores) ||
+    xdpCpuCores < 1
+  ) {
+    throw new Error('XDP zero-copy requires a positive XDP CPU allocation')
+  }
+  const pohCpuCore = config.xdp_poh_pinned_cpu_core
+  if (
+    typeof pohCpuCore !== 'number' ||
+    !Number.isInteger(pohCpuCore) ||
+    pohCpuCore < xdpCpuCores
+  ) {
+    throw new Error('XDP zero-copy requires a disjoint PoH CPU declaration')
+  }
+  return config
 }
 
 // Parses a non-negative integer from prompt input, or returns `fallback` when
@@ -29,13 +65,18 @@ const parseNonNegativeInt = (
   return n
 }
 
-// XDP (eXpress Data Path) accelerates Turbine retransmit. Only Agave/Jito
-// validators take these flags; Firedancer uses its own XDP path natively, so
-// for those types we return an empty config and skip the prompt entirely.
+// XDP (eXpress Data Path) accelerates Turbine retransmit. Firedancer uses its
+// own XDP path natively, so for those types we return an empty config and skip
+// the prompt entirely.
 const promptXdpConfig = async (
   validatorType: SolanaNodeType,
+  network: NetworkType = 'mainnet',
 ): Promise<XdpConfig> => {
-  if (validatorType !== 'agave' && validatorType !== 'jito') {
+  if (
+    validatorType !== 'agave' &&
+    validatorType !== 'jito' &&
+    validatorType !== 'allnodes-jito'
+  ) {
     return {}
   }
   const { enable } = await prompt([{
@@ -93,7 +134,7 @@ const promptXdpConfig = async (
   if (poh !== null) {
     cfg.xdp_poh_pinned_cpu_core = poh
   }
-  return cfg
+  return validateXdpConfig(validatorType, network, cfg)
 }
 
 export { promptXdpConfig }
