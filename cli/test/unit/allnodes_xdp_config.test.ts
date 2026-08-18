@@ -28,11 +28,13 @@ Deno.test('allnodes-jito zero-copy rejects testnet before persistence', () => {
 })
 
 Deno.test('zero-copy requires interface, CPU allocation, and disjoint PoH CPU', () => {
-  for (const config of [
-    { ...zeroCopy, xdp_interface: '' },
-    { ...zeroCopy, xdp_cpu_cores: 0 },
-    { ...zeroCopy, xdp_poh_pinned_cpu_core: 3 },
-  ]) {
+  for (
+    const config of [
+      { ...zeroCopy, xdp_interface: '' },
+      { ...zeroCopy, xdp_cpu_cores: 0 },
+      { ...zeroCopy, xdp_poh_pinned_cpu_core: 3 },
+    ]
+  ) {
     assertThrows(
       () => validateXdpConfig('allnodes-jito', 'mainnet', config),
       Error,
