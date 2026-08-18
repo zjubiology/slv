@@ -95,8 +95,13 @@ const initTestnetConfig = async (
     console.log(colors.red('❌ Failed to measure latencies. Please try again.'))
     return
   }
-  // XDP retransmit acceleration (agave/jito only)
-  const xdpConfig = await promptXdpConfig(validatorType as SolanaNodeType)
+  // XDP retransmit acceleration (Agave/Jito/Allnodes-Jito)
+  // Validate XDP before the inventory is persisted; testnet zero-copy must
+  // fail closed before addInventory writes any state.
+  const xdpConfig = await promptXdpConfig(
+    validatorType as SolanaNodeType,
+    'testnet',
+  )
   // Generate Vote Key
   const { voteAccount, authAccount } = await genVoteKey(identityAccount)
   // Generate or Add Inventory
